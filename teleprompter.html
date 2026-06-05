@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Advanced React Teleprompter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  </head>
+  <body class="bg-black">
+    <div id="root"></div>
+    <script type="text/babel" data-presets="react">
+      // From types.ts and constants.ts
+      const OrientationMode = {
+        Portrait: 0,
+        PortraitMirrored: 1,
+        Landscape: 2,
+        LandscapeMirrored: 3,
+      };
+
+      // Remplacé par le placeholder pour les données personnalisées
+      const DEFAULT_TEXT = `Celestory se présente comme une solution innovante pour concevoir des formations interactives, transformant l’apprentissage traditionnel en une expérience dynamique et immersive. Grâce à son interface intuitive et ses outils de personnalisation, chaque formateur peut créer des modules adaptés aux besoins spécifiques des apprenants.
+La plateforme permet de développer des modules d’apprentissage qui s’ajustent en fonction du rythme et des préférences de chaque utilisateur. Intégrer des contenus variés – qu’il s’agisse de textes explicatifs, de vidéos pédagogiques ou de quizz interactifs – devient un jeu d’enfant. Ainsi, chaque apprenant bénéficie d’un parcours personnalisé favorisant une meilleure compréhension et rétention des informations.
+L'un des grands atouts de Celestory est sa capacité à stimuler l’engagement. En incorporant des scénarios interactifs, des parcours non linéaires et des simulations, la plateforme invite les participants à devenir acteurs de leur apprentissage. Ce niveau d’interactivité non seulement capte l’attention, mais favorise également l’expérimentation et l’application concrète des connaissances.
+Celestory offre des outils de suivi avancés permettant aux formateurs de mesurer la progression des apprenants en temps réel. Des tableaux de bord détaillés et des indicateurs de performance facilitent l’identification des points forts et des axes d’amélioration. Cette approche analytique permet d’ajuster le contenu et le rythme de formation pour une efficacité maximale.
+Au-delà du contenu individuel, Celestory encourage une dimension collaborative. Les espaces de discussion et les fonctionnalités de feedback facilitent les échanges entre apprenants et formateurs. Cette collaboration enrichit l’expérience pédagogique, en favorisant le partage d’idées, la résolution collective de problèmes et l’émergence de nouvelles perspectives.
+En intégrant des technologies interactives et des outils de suivi performants, Celestory révolutionne la manière de concevoir des formations. Que vous soyez formateur cherchant à dynamiser vos contenus ou apprenant en quête d’un environnement stimulant, Celestory offre une plateforme complète pour favoriser un apprentissage actif, personnalisé et collaboratif.`;
+
+      const TICK_MS = 40;
+      const BASE_SCROLL_PX = 2;
+      const SPEED_STEP = 0.25;
+      const MIN_SPEED = 0.25;
+      const MAX_SPEED = 4.0;
+      const MIN_FONT_SIZE = 20;
+      const MAX_FONT_SIZE = 150;
+      const MIN_WIDTH = 50;
+      const MAX_WIDTH = 100;
+
+      const INITIAL_COLORS = {
+        text: '#FFFFFF',
+        h1: '#4FC3F7',
+        h2: '#81C784',
+        h3: '#FFD54F',
+        bold: '#FFD54F',
+        detailsBg: '#1A202C',
+        summaryText: '#A0AEC0',
+      };
+
+      const INITIAL_STATE = {
+        isPlaying: false,
+        speed: 1.0,
+        width: 80,
+        fontSize: 64,
+        orientation: OrientationMode.Portrait,
+        colors: INITIAL_COLORS,
+        controlsVisible: true,
+      };
+
+      // From components/icons.tsx
+      const PlayIcon = ({ className }) => (
+        <svg className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>
+      );
+
+      const PauseIcon = ({ className }) => (
+        <svg className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>
+      );
+
+      const ResetIcon = ({ className }) => (
+        <svg className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"></path></svg>
+      );
+
+      const FlipIcon = ({ className }) => (
+        <svg className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M15 21h2v-2h-2v2zm4-12h2V7h-2v2zM3 5v14c0 1.1.9 2 2 2h4v-2H5V5h4V3H5c-1.1 0-2 .9-2 2zm16-2v2h2c0-1.1-.9-2-2-2zm-8 20h2V1h-2v22zm-4-4h2v-2H7v2z m-4-4h2v-2H3v2zm0-4h2V7H3v2zm4 0h2V7H7v2zm4-4h2V3h-2v2zm0 16h2v-2h-2v2z"></path></svg>
+      );
+
+      const SettingsIcon = ({ className }) => (
+        <svg className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12-.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49.42l.38-2.65c.61-.25 1.17-.59-1.69-.98l2.49 1c.23.09.49 0 .61.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"></path></svg>
+      );
+
+      const CloseIcon = ({ className }) => (
+          <svg className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg>
+      );
+
+      // From components/Teleprompter.tsx
+      const getTransformClass = (orientation) => {
+        switch (orientation) {
+          case OrientationMode.Portrait:
+            return '';
+          case OrientationMode.PortraitMirrored:
+            return 'scale-x-[-1]';
+          case OrientationMode.Landscape:
+            return 'rotate-180';
+          case OrientationMode.LandscapeMirrored:
+            return 'rotate-180 scale-x-[-1]';
+          default:
+            return '';
+        }
+      };
+
+      const Teleprompter = React.forwardRef(
+        ({ text, orientation, width, fontSize, colors }, ref) => {
+          const dynamicStyles = {
+            '--text-color': colors.text,
+            '--h1-color': colors.h1,
+            '--h2-color': colors.h2,
+            '--h3-color': colors.h3,
+            '--bold-color': colors.bold,
+            '--details-bg-color': colors.detailsBg,
+            '--summary-text-color': colors.summaryText,
+            fontSize: `${fontSize}px`,
+          };
+
+          return (
+            <React.Fragment>
+              <style>
+                {`
+                  .teleprompter-content {
+                    color: var(--text-color);
+                  }
+                  .teleprompter-content h1 { 
+                      color: var(--h1-color); 
+                      font-size: 1.6em; 
+                      line-height: 1.2;
+                      font-weight: 700;
+                      margin: 0.8em 0 0.4em; 
+                  }
+                  .teleprompter-content h2 { 
+                      color: var(--h2-color); 
+                      font-size: 1.4em; 
+                      line-height: 1.25;
+                      font-weight: 600;
+                      margin: 0.9em 0 0.45em; 
+                  }
+                  .teleprompter-content h3 { 
+                      color: var(--h3-color); 
+                      font-size: 1.2em; 
+                      line-height: 1.3;
+                      font-weight: 600;
+                      margin: 1em 0 0.5em; 
+                  }
+                  .teleprompter-content strong, .teleprompter-content b { 
+                      color: var(--bold-color); 
+                      font-weight: 700; 
+                  }
+                  .teleprompter-content p {
+                    margin: 0.5em 0;
+                  }
+                  .teleprompter-content ul, .teleprompter-content ol {
+                    margin-left: 2em;
+                    margin-top: 0.5em;
+                    margin-bottom: 0.5em;
+                  }
+                  .teleprompter-content ul li {
+                    list-style-type: disc;
+                  }
+                   .teleprompter-content ol li {
+                    list-style-type: decimal;
+                  }
+                  .teleprompter-content details {
+                      background-color: var(--details-bg-color);
+                      border: 1px solid #4A5568;
+                      border-radius: 8px;
+                      padding: 0.5em 1em;
+                      margin: 1em 0;
+                  }
+                  .teleprompter-content summary {
+                      color: var(--summary-text-color);
+                      font-weight: 600;
+                      cursor: pointer;
+                      padding: 0.5em 0;
+                      outline: none;
+                  }
+                  .teleprompter-content summary::marker {
+                      color: var(--summary-text-color);
+                  }
+                `}
+              </style>
+              <div
+                ref={ref}
+                className={`h-[85vh] overflow-y-auto text-left transition-transform duration-300 ease-in-out ${getTransformClass(orientation)}`}
+                style={{ width: `${width}vw`, maxWidth: '100vw' }}
+              >
+                <div
+                  className="teleprompter-content p-8"
+                  style={dynamicStyles}
+                  dangerouslySetInnerHTML={{ __html: text }}
+                />
+              </div>
+            </React.Fragment>
+          );
+        }
+      );
+      
+      // From components/Controls.tsx
+      const Controls = ({
+        isPlaying,
+        speed,
+        width,
+        fontSize,
+        colors,
+        controlsVisible,
+        onPlayPause,
+        onReset,
+        onSpeedChange,
+        onWidthChange,
+        onFontSizeChange,
+        onOrientationCycle,
+        onColorChange,
+        onToggleControls,
+      }) => {
+        const handleColorInputChange = (e) => {
+          onColorChange(e.target.name, e.target.value);
+        };
+        
+        const renderOrientationLabel = () => "Mode";
+
+        return (
+          <React.Fragment>
+            <button
+              onClick={onToggleControls}
+              className="fixed bottom-4 right-4 z-[101] w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-transform transform hover:scale-110"
+              aria-label={controlsVisible ? "Hide controls" : "Show controls"}
+            >
+              {controlsVisible ? <CloseIcon className="w-7 h-7" /> : <SettingsIcon className="w-7 h-7" />}
+            </button>
+
+            {controlsVisible && (
+              <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[100] w-[95vw] max-w-5xl bg-gray-900/80 backdrop-blur-md text-white p-4 rounded-xl shadow-2xl border border-gray-700/60">
+                <div className="flex flex-col gap-4">
+                  <div className="flex flex-wrap items-center justify-center gap-3">
+                    <button onClick={onPlayPause} className="px-4 py-2 bg-blue-600 rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2 font-semibold">
+                      {isPlaying ? <PauseIcon className="w-5 h-5" /> : <PlayIcon className="w-5 h-5" />}
+                      <span>{isPlaying ? 'Pause' : 'Start'}</span>
+                    </button>
+                    <button onClick={onReset} className="px-4 py-2 bg-gray-600 rounded-md hover:bg-gray-700 transition-colors flex items-center gap-2">
+                      <ResetIcon className="w-5 h-5" />
+                      <span>Reset</span>
+                    </button>
+                    <button onClick={onOrientationCycle} className="px-4 py-2 bg-gray-600 rounded-md hover:bg-gray-700 transition-colors flex items-center gap-2">
+                      <FlipIcon className="w-5 h-5" />
+                      <span>{renderOrientationLabel()}</span>
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+                    <div className="flex items-center gap-2 bg-gray-800/50 p-2 rounded-md">
+                      <label htmlFor="speedRange" className="font-medium w-16">Vitesse</label>
+                      <input id="speedRange" type="range" min={MIN_SPEED} max={MAX_SPEED} step={SPEED_STEP} value={speed} onChange={e => onSpeedChange(parseFloat(e.target.value))} className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-500" />
+                      <span className="bg-gray-700 text-white text-xs font-mono py-1 px-2 rounded-md min-w-[50px] text-center">{speed.toFixed(2)}x</span>
+                    </div>
+                    <div className="flex items-center gap-2 bg-gray-800/50 p-2 rounded-md">
+                      <label htmlFor="widthRange" className="font-medium w-16">Largeur</label>
+                      <input id="widthRange" type="range" min={MIN_WIDTH} max={MAX_WIDTH} step="1" value={width} onChange={onWidthChange} className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-500" />
+                      <span className="bg-gray-700 text-white text-xs font-mono py-1 px-2 rounded-md min-w-[50px] text-center">{width}%</span>
+                    </div>
+                    <div className="flex items-center gap-2 bg-gray-800/50 p-2 rounded-md">
+                      <label htmlFor="fontSizeRange" className="font-medium w-16">Taille</label>
+                      <input id="fontSizeRange" type="range" min={MIN_FONT_SIZE} max={MAX_FONT_SIZE} step="1" value={fontSize} onChange={onFontSizeChange} className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-500" />
+                      <span className="bg-gray-700 text-white text-xs font-mono py-1 px-2 rounded-md min-w-[50px] text-center">{fontSize}px</span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-3 pt-2">
+                      <div className="flex items-center gap-2"><label>Texte</label><input type="color" name="text" value={colors.text} onChange={handleColorInputChange} className="w-8 h-7 p-0 border-none rounded bg-transparent cursor-pointer"/></div>
+                      <div className="flex items-center gap-2"><label>H1</label><input type="color" name="h1" value={colors.h1} onChange={handleColorInputChange} className="w-8 h-7 p-0 border-none rounded bg-transparent cursor-pointer"/></div>
+                      <div className="flex items-center gap-2"><label>H2</label><input type="color" name="h2" value={colors.h2} onChange={handleColorInputChange} className="w-8 h-7 p-0 border-none rounded bg-transparent cursor-pointer"/></div>
+                      <div className="flex items-center gap-2"><label>H3</label><input type="color" name="h3" value={colors.h3} onChange={handleColorInputChange} className="w-8 h-7 p-0 border-none rounded bg-transparent cursor-pointer"/></div>
+                      <div className="flex items-center gap-2"><label>Gras</label><input type="color" name="bold" value={colors.bold} onChange={handleColorInputChange} className="w-8 h-7 p-0 border-none rounded bg-transparent cursor-pointer"/></div>
+                      <div className="flex items-center gap-2"><label>Menu Fond</label><input type="color" name="detailsBg" value={colors.detailsBg} onChange={handleColorInputChange} className="w-8 h-7 p-0 border-none rounded bg-transparent cursor-pointer"/></div>
+                      <div className="flex items-center gap-2"><label>Menu Titre</label><input type="color" name="summaryText" value={colors.summaryText} onChange={handleColorInputChange} className="w-8 h-7 p-0 border-none rounded bg-transparent cursor-pointer"/></div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </React.Fragment>
+        );
+      };
+
+      // From App.tsx
+      function App() {
+        // Enlève l'attribut "open" pour que les menus soient fermés par défaut
+        const [text, setText] = React.useState(DEFAULT_TEXT.replace(/ open=""/g, ''));
+        const [isPlaying, setIsPlaying] = React.useState(INITIAL_STATE.isPlaying);
+        const [speed, setSpeed] = React.useState(INITIAL_STATE.speed);
+        const [width, setWidth] = React.useState(INITIAL_STATE.width);
+        const [fontSize, setFontSize] = React.useState(INITIAL_STATE.fontSize);
+        const [orientation, setOrientation] = React.useState(INITIAL_STATE.orientation);
+        const [colors, setColors] = React.useState(INITIAL_STATE.colors);
+        const [controlsVisible, setControlsVisible] = React.useState(INITIAL_STATE.controlsVisible);
+
+        const scrollContainerRef = React.useRef(null);
+        const scrollIntervalRef = React.useRef(null);
+
+        const stopScrolling = React.useCallback(() => {
+          if (scrollIntervalRef.current) {
+            clearInterval(scrollIntervalRef.current);
+            scrollIntervalRef.current = null;
+          }
+        }, []);
+
+        const handlePlayPause = React.useCallback(() => {
+          setIsPlaying(prev => !prev);
+        }, []);
+
+        const handleReset = React.useCallback(() => {
+          setIsPlaying(false);
+          if (scrollContainerRef.current) {
+            scrollContainerRef.current.scrollTop = 0;
+          }
+        }, []);
+
+        const changeSpeed = React.useCallback((delta) => {
+          setSpeed(prev => {
+            const newSpeed = prev + delta;
+            if (newSpeed < MIN_SPEED) return MIN_SPEED;
+            if (newSpeed > MAX_SPEED) return MAX_SPEED;
+            return newSpeed;
+          });
+        }, []);
+
+        const handleWidthChange = (event) => {
+          setWidth(parseInt(event.target.value, 10));
+        };
+
+        const handleFontSizeChange = (event) => {
+          setFontSize(parseInt(event.target.value, 10));
+        };
+        
+        const handleOrientationCycle = () => {
+          setOrientation(prev => (prev + 1) % 4);
+        };
+        
+        const handleColorChange = (target, value) => {
+          setColors(prev => ({ ...prev, [target]: value }));
+        };
+
+        const toggleControls = () => {
+          setControlsVisible(prev => !prev);
+        }
+
+        React.useEffect(() => {
+          if (isPlaying) {
+            scrollIntervalRef.current = window.setInterval(() => {
+              if (scrollContainerRef.current) {
+                const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
+                const scrollAmount = BASE_SCROLL_PX * speed;
+                scrollContainerRef.current.scrollTop += scrollAmount;
+
+                if (scrollTop >= scrollHeight - clientHeight - 5) { // Added buffer
+                  setIsPlaying(false);
+                }
+              }
+            }, TICK_MS);
+          } else {
+            stopScrolling();
+          }
+          return () => stopScrolling();
+        }, [isPlaying, speed, stopScrolling]);
+
+        React.useEffect(() => {
+          const handleKeyDown = (e) => {
+            if (e.target.type === 'range' || e.target.type === 'color') return;
+            
+            if (e.code === 'Space') {
+              e.preventDefault();
+              handlePlayPause();
+            } else if (e.key.toLowerCase() === 'd') {
+              changeSpeed(SPEED_STEP);
+            } else if (e.key.toLowerCase() === 's') {
+              changeSpeed(-SPEED_STEP);
+            }
+          };
+
+          window.addEventListener('keydown', handleKeyDown);
+          return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+          };
+        }, [handlePlayPause, changeSpeed]);
+
+        return (
+          <main className="h-screen w-screen bg-black flex flex-col items-center justify-center font-sans overflow-hidden">
+            <Teleprompter
+              ref={scrollContainerRef}
+              text={text}
+              orientation={orientation}
+              width={width}
+              fontSize={fontSize}
+              colors={colors}
+            />
+            <Controls
+              isPlaying={isPlaying}
+              speed={speed}
+              width={width}
+              fontSize={fontSize}
+              colors={colors}
+              controlsVisible={controlsVisible}
+              onPlayPause={handlePlayPause}
+              onReset={handleReset}
+              onSpeedChange={setSpeed}
+              onWidthChange={handleWidthChange}
+              onFontSizeChange={handleFontSizeChange}
+              onOrientationCycle={handleOrientationCycle}
+              onColorChange={handleColorChange}
+              onToggleControls={toggleControls}
+            />
+          </main>
+        );
+      }
+
+      // From index.tsx
+      const rootElement = document.getElementById('root');
+      const root = ReactDOM.createRoot(rootElement);
+      root.render(
+        <React.StrictMode>
+          <App />
+        </React.StrictMode>
+      );
+    </script>
+  </body>
+</html>
