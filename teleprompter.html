@@ -503,10 +503,30 @@ N'oubliez pas de vous abonner et de laisser un pouce bleu !`
       onSaveScript,
       onDeleteScript,
       onImportJson,
-      onExportJson
+      onExportJson,
+      countdownDuration,
+      onCountdownDurationChange,
+      fontFamily,
+      onFontFamilyChange,
+      lineHeight,
+      onLineHeightChange,
+      colors,
+      onColorsChange,
+      onResetColors,
+      guidePosition,
+      onGuidePositionChange,
+      showGuide,
+      onToggleGuide,
+      orientation,
+      onOrientationCycle
     }) => {
+      const [activeTab, setActiveTab] = React.useState('scripts');
       const [editingScript, setEditingScript] = React.useState(null);
       const textareaRef = React.useRef(null);
+
+      React.useEffect(() => {
+        setActiveTab('scripts');
+      }, [isOpen]);
 
       React.useEffect(() => {
         const current = scripts.find(s => s.id === activeScriptId) || scripts[0];
@@ -601,183 +621,429 @@ N'oubliez pas de vous abonner et de laisser un pouce bleu !`
 
       return (
         <div className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-gray-900 border border-gray-800 w-full max-w-5xl h-[85vh] rounded-2xl shadow-2xl flex flex-col md:flex-row overflow-hidden">
-            {/* Sidebar: Script Selection */}
-            <div className="w-full md:w-1/3 border-b md:border-b-0 md:border-r border-gray-800 bg-gray-950/50 p-4 flex flex-col">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                  <Icons.Document className="text-blue-500" /> Mes Scripts
-                </h3>
+          <div className="bg-gray-900 border border-gray-800 w-full max-w-5xl h-[85vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+            
+            {/* Modal Top Header with Navigation Tabs (Scripts is always first) & Close button */}
+            <div className="px-5 py-3 border-b border-gray-800 bg-gray-950/90 flex items-center justify-between flex-shrink-0">
+              <div className="flex items-center gap-2">
                 <button
-                  onClick={handleCreateNew}
-                  className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold transition"
+                  type="button"
+                  onClick={() => setActiveTab('scripts')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition ${
+                    activeTab === 'scripts'
+                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
+                      : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                  }`}
                 >
-                  + Nouveau
+                  <Icons.Document className="w-4 h-4" />
+                  <span>Scripts</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('options')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition ${
+                    activeTab === 'options'
+                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
+                      : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                  }`}
+                >
+                  <Icons.Settings className="w-4 h-4" />
+                  <span>Options</span>
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto space-y-2 pr-1">
-                {scripts.map((script) => (
-                  <div
-                    key={script.id}
-                    onClick={() => {
-                      onSelectScript(script.id);
-                      setEditingScript({ ...script });
-                    }}
-                    className={`p-3 rounded-xl cursor-pointer border transition group flex items-start justify-between gap-2 ${
-                      script.id === editingScript.id
-                        ? 'bg-blue-600/20 border-blue-500 text-white'
-                        : 'bg-gray-900 border-gray-800 text-gray-300 hover:bg-gray-800'
-                    }`}
-                  >
-                    <div className="flex-1 min-w-0">
-                      <div className="font-semibold text-sm truncate">{script.title}</div>
-                      <div className="flex items-center justify-between text-xs text-gray-400 mt-2">
-                        <span className="bg-gray-800 px-2 py-0.5 rounded text-gray-300">{script.category}</span>
-                        <span>{script.updatedAt}</span>
+              <button
+                type="button"
+                onClick={onClose}
+                className="p-1.5 text-gray-400 hover:text-white rounded-lg hover:bg-gray-800 transition"
+                title="Fermer (Échap)"
+              >
+                <Icons.Close className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* TAB 1 : SCRIPTS */}
+            {activeTab === 'scripts' && (
+              <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0">
+                {/* Sidebar: Script Selection */}
+                <div className="w-full md:w-1/3 border-b md:border-b-0 md:border-r border-gray-800 bg-gray-950/50 p-4 flex flex-col">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                      <Icons.Document className="text-blue-500 w-4 h-4" /> Mes Scripts
+                    </h3>
+                    <button
+                      onClick={handleCreateNew}
+                      className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold transition shadow-sm shadow-blue-600/20"
+                    >
+                      + Nouveau
+                    </button>
+                  </div>
+
+                  <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+                    {scripts.map((script) => (
+                      <div
+                        key={script.id}
+                        onClick={() => {
+                          onSelectScript(script.id);
+                          setEditingScript({ ...script });
+                        }}
+                        className={`p-3 rounded-xl cursor-pointer border transition group flex items-start justify-between gap-2 ${
+                          script.id === editingScript.id
+                            ? 'bg-blue-600/20 border-blue-500 text-white'
+                            : 'bg-gray-900 border-gray-800 text-gray-300 hover:bg-gray-800'
+                        }`}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-sm truncate">{script.title}</div>
+                          <div className="flex items-center justify-between text-xs text-gray-400 mt-2">
+                            <span className="bg-gray-800 px-2 py-0.5 rounded text-gray-300">{script.category}</span>
+                            <span>{script.updatedAt}</span>
+                          </div>
+                        </div>
+                        {scripts.length > 1 && (
+                          <button
+                            onClick={(e) => handleDelete(script.id, e)}
+                            className="opacity-0 group-hover:opacity-100 p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition"
+                            title="Supprimer ce script"
+                          >
+                            <Icons.Trash className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="pt-4 border-t border-gray-800 flex flex-col gap-2">
+                    <label className="flex items-center justify-center gap-2 px-3 py-2 bg-gray-800 hover:bg-gray-700 text-xs font-medium rounded-lg cursor-pointer transition">
+                      <Icons.Markdown className="w-4 h-4 text-purple-400" />
+                      <span>Importer Markdown (.md, .txt)</span>
+                      <input type="file" accept=".md,.markdown,.txt" onChange={handleFileUpload} className="hidden" />
+                    </label>
+
+                    <label className="flex items-center justify-center gap-2 px-3 py-2 bg-gray-800 hover:bg-gray-700 text-xs font-medium rounded-lg cursor-pointer transition">
+                      <Icons.Upload className="w-4 h-4 text-emerald-400" />
+                      <span>Importer JSON (.json)</span>
+                      <input type="file" accept=".json" onChange={handleFileUpload} className="hidden" />
+                    </label>
+
+                    <button
+                      onClick={onExportJson}
+                      className="flex items-center justify-center gap-2 px-3 py-2 bg-gray-800 hover:bg-gray-700 text-xs font-medium rounded-lg transition"
+                    >
+                      <Icons.Download className="w-4 h-4 text-sky-400" />
+                      <span>Exporter tous les Scripts (JSON)</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Content Editor Panel */}
+                <div className="flex-1 p-6 flex flex-col bg-gray-900 overflow-hidden">
+                  <div className="mb-4">
+                    <input
+                      type="text"
+                      value={editingScript.title}
+                      onChange={(e) => setEditingScript({ ...editingScript, title: e.target.value })}
+                      className="text-xl font-bold bg-transparent border-b border-gray-700 focus:border-blue-500 outline-none text-white pb-1 w-full"
+                      placeholder="Titre du document..."
+                    />
+                  </div>
+
+                  <div className="mb-3 flex items-center justify-between gap-4 flex-wrap">
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="text-gray-400">Catégorie :</span>
+                      <input
+                        type="text"
+                        value={editingScript.category || ''}
+                        onChange={(e) => setEditingScript({ ...editingScript, category: e.target.value })}
+                        className="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-white outline-none focus:border-blue-500"
+                      />
+                    </div>
+
+                    {/* Markdown Toolbar */}
+                    <div className="flex items-center gap-1.5 bg-gray-950/60 p-1 rounded-lg border border-gray-800">
+                      <button
+                        type="button"
+                        onClick={() => insertMarkdown('# ')}
+                        className="px-2 py-0.5 text-xs bg-gray-800 hover:bg-gray-700 rounded text-gray-300 font-bold"
+                        title="Titre H1 (#)"
+                      >
+                        H1
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => insertMarkdown('## ')}
+                        className="px-2 py-0.5 text-xs bg-gray-800 hover:bg-gray-700 rounded text-gray-300 font-bold"
+                        title="Sous-titre H2 (##)"
+                      >
+                        H2
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => insertMarkdown('**', '**')}
+                        className="px-2 py-0.5 text-xs bg-gray-800 hover:bg-gray-700 rounded text-gray-300 font-bold"
+                        title="Texte en gras (**texte**)"
+                      >
+                        B
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => insertMarkdown('- ')}
+                        className="px-2 py-0.5 text-xs bg-gray-800 hover:bg-gray-700 rounded text-gray-300"
+                        title="Liste à puces (-)"
+                      >
+                        • Liste
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => insertMarkdown('<details>\n  <summary>💡 Note pour le présentateur</summary>\n  <p>', '</p>\n</details>')}
+                        className="px-2 py-0.5 text-xs bg-gray-800 hover:bg-gray-700 rounded text-amber-400"
+                        title="Note / Souffleur (<details>)"
+                      >
+                        💡 Note
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex-1 flex flex-col mb-4 min-h-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-xs text-gray-400 font-medium">
+                        Contenu Markdown ou HTML (collez directement votre texte) :
+                      </label>
+                      <span className="text-[11px] text-gray-500 hidden sm:inline">Supporte le Markdown (#, **, -, etc.) et le HTML</span>
+                    </div>
+                    <textarea
+                      ref={textareaRef}
+                      value={editingScript.text}
+                      onChange={(e) => setEditingScript({ ...editingScript, text: e.target.value })}
+                      className="w-full flex-1 bg-gray-950 border border-gray-800 rounded-xl p-4 font-mono text-xs text-gray-200 outline-none focus:border-blue-500 resize-none leading-relaxed"
+                      placeholder="# Titre du discours&#10;&#10;Rédigez ou collez votre texte ici en Markdown ou HTML..."
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-end gap-3 pt-2">
+                    <button
+                      onClick={onClose}
+                      className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl text-sm font-medium transition"
+                    >
+                      Annuler
+                    </button>
+                    <button
+                      onClick={handleSave}
+                      className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-sm font-semibold transition shadow-lg shadow-blue-600/30"
+                    >
+                      Enregistrer le Script
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 2 : OPTIONS */}
+            {activeTab === 'options' && (
+              <div className="flex-1 p-6 overflow-y-auto bg-gray-900 min-h-0 space-y-6">
+                {/* Minuteur / Compte à rebours avant départ */}
+                <div className="bg-gray-950/60 border border-gray-800 rounded-2xl p-5 shadow-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="text-base font-bold text-white flex items-center gap-2">
+                      <span>⏱️</span> Compte à Rebours (Timer)
+                    </h4>
+                    <span className="text-xs font-mono font-bold text-blue-400 bg-blue-950/50 border border-blue-800/60 px-2.5 py-1 rounded-lg">
+                      {countdownDuration === 0 ? "Désactivé (0s)" : `${countdownDuration} secondes`}
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-400 mb-4">
+                    Délai d'attente avant que le texte commence à défiler lorsque vous appuyez sur Lancer.
+                  </p>
+
+                  <div className="flex flex-wrap items-center gap-2 mb-3">
+                    {[
+                      { label: 'Désactivé (0s)', val: 0 },
+                      { label: '2s', val: 2 },
+                      { label: '3s (défaut)', val: 3 },
+                      { label: '5s', val: 5 },
+                      { label: '10s', val: 10 }
+                    ].map(preset => (
+                      <button
+                        key={preset.val}
+                        type="button"
+                        onClick={() => onCountdownDurationChange(preset.val)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${
+                          countdownDuration === preset.val
+                            ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
+                            : 'bg-gray-800 hover:bg-gray-700 text-gray-300'
+                        }`}
+                      >
+                        {preset.label}
+                      </button>
+                    ))}
+
+                    <div className="flex items-center gap-2 ml-auto">
+                      <span className="text-xs text-gray-400">Personnalisé :</span>
+                      <input
+                        type="number"
+                        min="0"
+                        max="30"
+                        value={countdownDuration}
+                        onChange={(e) => onCountdownDurationChange(Math.max(0, Math.min(30, parseInt(e.target.value) || 0)))}
+                        className="w-16 bg-gray-900 border border-gray-700 focus:border-blue-500 rounded-lg px-2 py-1 text-center font-mono text-xs text-white"
+                      />
+                      <span className="text-xs text-gray-400">sec</span>
+                    </div>
+                  </div>
+
+                  <div className="p-3 bg-blue-950/40 border border-blue-900/50 rounded-xl flex items-center gap-2 text-xs text-blue-200">
+                    <span className="text-base">💡</span>
+                    <span>
+                      <strong>Astuce :</strong> Pendant le décompte, appuyez une deuxième fois sur <kbd className="bg-gray-800 px-1 py-0.5 rounded border border-gray-700 font-mono text-[10px] text-white">Espace</kbd> (ou sur le bouton Lancer) pour démarrer le défilement immédiatement !
+                    </span>
+                  </div>
+                </div>
+
+                {/* Typographie & Interligne */}
+                <div className="bg-gray-950/60 border border-gray-800 rounded-2xl p-5 shadow-lg">
+                  <h4 className="text-base font-bold text-white flex items-center gap-2 mb-2">
+                    <span>🔤</span> Typographie & Interligne
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+                    <div>
+                      <label className="text-xs font-medium text-gray-400 block mb-1.5">Police de caractères :</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {[
+                          { label: 'Inter (Défaut)', val: 'Inter' },
+                          { label: 'Lexend (Lisibilité)', val: 'Lexend' },
+                          { label: 'Sans-Serif', val: 'system-ui, sans-serif' },
+                          { label: 'Monospace', val: 'monospace' }
+                        ].map(f => (
+                          <button
+                            key={f.val}
+                            type="button"
+                            onClick={() => onFontFamilyChange(f.val)}
+                            className={`p-2 rounded-xl text-xs font-medium border text-left transition ${
+                              fontFamily === f.val
+                                ? 'border-blue-500 bg-blue-600/20 text-white'
+                                : 'border-gray-800 bg-gray-900 text-gray-300 hover:bg-gray-800'
+                            }`}
+                            style={{ fontFamily: f.val }}
+                          >
+                            {f.label}
+                          </button>
+                        ))}
                       </div>
                     </div>
-                    {scripts.length > 1 && (
-                      <button
-                        onClick={(e) => handleDelete(script.id, e)}
-                        className="opacity-0 group-hover:opacity-100 p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition"
-                        title="Supprimer ce script"
-                      >
-                        <Icons.Trash className="w-4 h-4" />
-                      </button>
-                    )}
+
+                    <div>
+                      <label className="text-xs font-medium text-gray-400 block mb-1.5">Interligne (Hauteur de ligne) :</label>
+                      <div className="grid grid-cols-4 gap-2">
+                        {[1.2, 1.4, 1.6, 1.8].map(lh => (
+                          <button
+                            key={lh}
+                            type="button"
+                            onClick={() => onLineHeightChange(lh)}
+                            className={`p-2 rounded-xl text-xs font-mono font-bold text-center border transition ${
+                              lineHeight === lh
+                                ? 'border-blue-500 bg-blue-600/20 text-white'
+                                : 'border-gray-800 bg-gray-900 text-gray-300 hover:bg-gray-800'
+                            }`}
+                          >
+                            {lh}x
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                ))}
-              </div>
-
-              <div className="pt-4 border-t border-gray-800 flex flex-col gap-2">
-                <label className="flex items-center justify-center gap-2 px-3 py-2 bg-gray-800 hover:bg-gray-700 text-xs font-medium rounded-lg cursor-pointer transition">
-                  <Icons.Markdown className="w-4 h-4 text-purple-400" />
-                  <span>Importer Markdown (.md, .txt)</span>
-                  <input type="file" accept=".md,.markdown,.txt" onChange={handleFileUpload} className="hidden" />
-                </label>
-
-                <label className="flex items-center justify-center gap-2 px-3 py-2 bg-gray-800 hover:bg-gray-700 text-xs font-medium rounded-lg cursor-pointer transition">
-                  <Icons.Upload className="w-4 h-4 text-emerald-400" />
-                  <span>Importer JSON (.json)</span>
-                  <input type="file" accept=".json" onChange={handleFileUpload} className="hidden" />
-                </label>
-
-                <button
-                  onClick={onExportJson}
-                  className="flex items-center justify-center gap-2 px-3 py-2 bg-gray-800 hover:bg-gray-700 text-xs font-medium rounded-lg transition"
-                >
-                  <Icons.Download className="w-4 h-4 text-sky-400" />
-                  <span>Exporter tous les Scripts (JSON)</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Content Editor Panel */}
-            <div className="flex-1 p-6 flex flex-col bg-gray-900">
-              <div className="flex items-center justify-between mb-4">
-                <input
-                  type="text"
-                  value={editingScript.title}
-                  onChange={(e) => setEditingScript({ ...editingScript, title: e.target.value })}
-                  className="text-xl font-bold bg-transparent border-b border-gray-700 focus:border-blue-500 outline-none text-white pb-1 w-2/3"
-                  placeholder="Titre du document..."
-                />
-                <button
-                  onClick={onClose}
-                  className="p-1.5 text-gray-400 hover:text-white rounded-lg hover:bg-gray-800"
-                >
-                  <Icons.Close />
-                </button>
-              </div>
-
-              <div className="mb-3 flex items-center justify-between gap-4">
-                <div className="flex items-center gap-2 text-xs">
-                  <span className="text-gray-400">Catégorie:</span>
-                  <input
-                    type="text"
-                    value={editingScript.category || ''}
-                    onChange={(e) => setEditingScript({ ...editingScript, category: e.target.value })}
-                    className="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-white outline-none focus:border-blue-500"
-                  />
                 </div>
 
-                {/* Markdown Toolbar */}
-                <div className="flex items-center gap-1.5 bg-gray-950/60 p-1 rounded-lg border border-gray-800">
+                {/* Couleurs du Texte & Fond */}
+                <div className="bg-gray-950/60 border border-gray-800 rounded-2xl p-5 shadow-lg">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-base font-bold text-white flex items-center gap-2">
+                      <span>🎨</span> Couleurs du Texte & Fond
+                    </h4>
+                    <button
+                      type="button"
+                      onClick={onResetColors}
+                      className="text-xs text-gray-400 hover:text-white underline transition"
+                    >
+                      Rétablir les couleurs par défaut
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    {[
+                      { key: 'background', label: 'Arrière-plan' },
+                      { key: 'text', label: 'Texte normal' },
+                      { key: 'h1', label: 'Titre H1' },
+                      { key: 'h2', label: 'Sous-titre H2' },
+                      { key: 'h3', label: 'Titre H3' },
+                      { key: 'bold', label: 'Texte en gras' },
+                      { key: 'detailsBg', label: 'Fond note' },
+                      { key: 'summaryText', label: 'Titre note' }
+                    ].map(item => (
+                      <div key={item.key} className="p-2.5 bg-gray-900 border border-gray-800 rounded-xl flex items-center justify-between gap-2">
+                        <span className="text-xs text-gray-300 truncate">{item.label}</span>
+                        <input
+                          type="color"
+                          value={colors[item.key] || '#ffffff'}
+                          onChange={(e) => onColorsChange({ ...colors, [item.key]: e.target.value })}
+                          className="w-7 h-7 rounded-lg cursor-pointer bg-transparent border-0 outline-none"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Repère d'œil & Affichage */}
+                <div className="bg-gray-950/60 border border-gray-800 rounded-2xl p-5 shadow-lg">
+                  <h4 className="text-base font-bold text-white flex items-center gap-2 mb-3">
+                    <span>📐</span> Repère d'Œil & Miroir
+                  </h4>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="text-xs font-medium text-gray-400">Position de la ligne repère :</label>
+                        <span className="text-xs font-mono font-bold text-red-400">{guidePosition}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="10"
+                        max="90"
+                        value={guidePosition}
+                        onChange={(e) => onGuidePositionChange(Number(e.target.value))}
+                        className="w-full accent-red-600 cursor-pointer"
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between p-3 bg-gray-900 border border-gray-800 rounded-xl">
+                      <div>
+                        <div className="text-xs font-semibold text-white">Ligne repère rouge</div>
+                        <div className="text-[11px] text-gray-400">Afficher la ligne d'alignement du regard</div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={onToggleGuide}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                          showGuide ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-400'
+                        }`}
+                      >
+                        {showGuide ? 'Visible' : 'Masquée'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end pt-2">
                   <button
                     type="button"
-                    onClick={() => insertMarkdown('# ')}
-                    className="px-2 py-0.5 text-xs bg-gray-800 hover:bg-gray-700 rounded text-gray-300 font-bold"
-                    title="Titre H1 (#)"
+                    onClick={onClose}
+                    className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-sm font-semibold transition shadow-lg shadow-blue-600/30"
                   >
-                    H1
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => insertMarkdown('## ')}
-                    className="px-2 py-0.5 text-xs bg-gray-800 hover:bg-gray-700 rounded text-gray-300 font-bold"
-                    title="Sous-titre H2 (##)"
-                  >
-                    H2
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => insertMarkdown('**', '**')}
-                    className="px-2 py-0.5 text-xs bg-gray-800 hover:bg-gray-700 rounded text-gray-300 font-bold"
-                    title="Texte en gras (**texte**)"
-                  >
-                    B
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => insertMarkdown('- ')}
-                    className="px-2 py-0.5 text-xs bg-gray-800 hover:bg-gray-700 rounded text-gray-300"
-                    title="Liste à puces (-)"
-                  >
-                    • Liste
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => insertMarkdown('<details>\n  <summary>💡 Note pour le présentateur</summary>\n  <p>', '</p>\n</details>')}
-                    className="px-2 py-0.5 text-xs bg-gray-800 hover:bg-gray-700 rounded text-amber-400"
-                    title="Note / Souffleur (<details>)"
-                  >
-                    💡 Note
+                    Terminer et Reprendre
                   </button>
                 </div>
               </div>
-
-              <div className="flex-1 flex flex-col mb-4">
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs text-gray-400 font-medium">
-                    Contenu Markdown ou HTML (collez directement votre texte) :
-                  </label>
-                  <span className="text-[11px] text-gray-500">Supporte le Markdown (#, **, -, etc.) et le HTML</span>
-                </div>
-                <textarea
-                  ref={textareaRef}
-                  value={editingScript.text}
-                  onChange={(e) => setEditingScript({ ...editingScript, text: e.target.value })}
-                  className="w-full flex-1 bg-gray-950 border border-gray-800 rounded-xl p-4 font-mono text-xs text-gray-200 outline-none focus:border-blue-500 resize-none leading-relaxed"
-                  placeholder="# Titre du discours&#10;&#10;Rédigez ou collez votre texte ici en Markdown ou HTML..."
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-3 pt-2">
-                <button
-                  onClick={onClose}
-                  className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl text-sm font-medium transition"
-                >
-                  Annuler
-                </button>
-                <button
-                  onClick={handleSave}
-                  className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-sm font-semibold transition shadow-lg shadow-blue-600/30"
-                >
-                  Enregistrer
-                </button>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       );
@@ -959,14 +1225,14 @@ N'oubliez pas de vous abonner et de laisser un pouce bleu !`
                 <Icons.Eye className="w-4 h-4" />
               </button>
 
-              {/* Open Script Modal */}
+              {/* Open Menu Modal (Scripts & Options) */}
               <button
                 onClick={onOpenScriptManager}
                 className="p-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white rounded-xl transition flex items-center gap-1.5 text-xs font-medium flex-shrink-0"
-                title="Gérer les scripts (Markdown / JSON)"
+                title="Menu : Scripts & Options (Édition)"
               >
                 <Icons.Edit className="w-4 h-4" />
-                <span className="hidden sm:inline">Scripts</span>
+                <span className="hidden sm:inline">Menu</span>
               </button>
 
               {/* Fullscreen Button */}
@@ -1018,10 +1284,25 @@ N'oubliez pas de vous abonner et de laisser un pouce bleu !`
         const saved = localStorage.getItem('prompter_font_size');
         return saved ? Number(saved) : 56;
       });
-      const [lineHeight] = React.useState(1.5);
-      const [fontFamily] = React.useState('Inter');
+      const [countdownDuration, setCountdownDuration] = React.useState(() => {
+        const saved = localStorage.getItem('prompter_countdown_duration');
+        return saved !== null ? Number(saved) : 3;
+      });
+      const [lineHeight, setLineHeight] = React.useState(() => {
+        const saved = localStorage.getItem('prompter_line_height');
+        return saved ? Number(saved) : 1.5;
+      });
+      const [fontFamily, setFontFamily] = React.useState(() => {
+        return localStorage.getItem('prompter_font_family') || 'Inter';
+      });
       const [orientation, setOrientation] = React.useState(ORIENTATION_MODES.NORMAL);
-      const [colors] = React.useState(DEFAULT_COLORS);
+      const [colors, setColors] = React.useState(() => {
+        const saved = localStorage.getItem('prompter_colors');
+        if (saved) {
+          try { return JSON.parse(saved); } catch (e) {}
+        }
+        return DEFAULT_COLORS;
+      });
       const [showGuide, setShowGuide] = React.useState(true);
       const [guidePosition, setGuidePosition] = React.useState(() => {
         const saved = localStorage.getItem('prompter_guide_pos');
@@ -1059,6 +1340,26 @@ N'oubliez pas de vous abonner et de laisser un pouce bleu !`
       React.useEffect(() => {
         localStorage.setItem('prompter_guide_pos', String(guidePosition));
       }, [guidePosition]);
+
+      React.useEffect(() => {
+        localStorage.setItem('prompter_countdown_duration', String(countdownDuration));
+      }, [countdownDuration]);
+
+      React.useEffect(() => {
+        localStorage.setItem('prompter_font_family', fontFamily);
+      }, [fontFamily]);
+
+      React.useEffect(() => {
+        localStorage.setItem('prompter_line_height', String(lineHeight));
+      }, [lineHeight]);
+
+      React.useEffect(() => {
+        localStorage.setItem('prompter_colors', JSON.stringify(colors));
+      }, [colors]);
+
+      const handleResetColors = () => {
+        setColors(DEFAULT_COLORS);
+      };
 
       // Scroll Animation Engine
       React.useEffect(() => {
@@ -1121,27 +1422,40 @@ N'oubliez pas de vous abonner et de laisser un pouce bleu !`
       };
 
       const handlePlayPause = React.useCallback(() => {
+        if (isCountingDown) {
+          // Second click on space launches prompter immediately!
+          setIsCountingDown(false);
+          setIsPlaying(true);
+          startTimeRef.current = Date.now();
+          return;
+        }
         if (isPlaying) {
           setIsPlaying(false);
-          setIsCountingDown(false);
           dispatchCelestoryOutput();
         } else {
-          setIsCountingDown(true);
-          setCountdownValue(3);
+          if (countdownDuration > 0) {
+            setIsCountingDown(true);
+            setCountdownValue(countdownDuration);
+          } else {
+            setIsPlaying(true);
+            startTimeRef.current = Date.now();
+          }
         }
-      }, [isPlaying]);
+      }, [isPlaying, isCountingDown, countdownDuration]);
 
       React.useEffect(() => {
         let timer;
         if (isCountingDown) {
-          if (countdownValue > 0) {
+          if (countdownValue > 1) {
             timer = setTimeout(() => {
               setCountdownValue(prev => prev - 1);
             }, 1000);
-          } else {
-            setIsCountingDown(false);
-            setIsPlaying(true);
-            startTimeRef.current = Date.now();
+          } else if (countdownValue === 1) {
+            timer = setTimeout(() => {
+              setIsCountingDown(false);
+              setIsPlaying(true);
+              startTimeRef.current = Date.now();
+            }, 1000);
           }
         }
         return () => clearTimeout(timer);
@@ -1304,6 +1618,19 @@ N'oubliez pas de vous abonner et de laisser un pouce bleu !`
             onToggleFullscreen={toggleFullscreen}
           />
 
+          {/* Animated Countdown Overlay with Instant Launch Hint */}
+          {isCountingDown && (
+            <div className="fixed inset-0 z-40 flex flex-col items-center justify-center pointer-events-none bg-black/40 backdrop-blur-[2px]">
+              <div className="w-28 h-28 rounded-3xl bg-blue-600/90 border border-blue-400/50 shadow-2xl flex items-center justify-center text-6xl font-black text-white animate-pulse">
+                {countdownValue}
+              </div>
+              <div className="mt-4 px-3.5 py-1.5 rounded-full bg-gray-900/90 border border-gray-700/60 text-xs font-medium text-gray-300 backdrop-blur-md shadow-lg flex items-center gap-2">
+                <kbd className="bg-gray-800 border border-gray-600 px-1.5 py-0.5 rounded text-[10px] text-white font-mono">Espace</kbd>
+                <span>pour démarrer immédiatement</span>
+              </div>
+            </div>
+          )}
+
           <ScriptManagerModal
             isOpen={isScriptManagerOpen}
             onClose={() => setIsScriptManagerOpen(false)}
@@ -1314,6 +1641,21 @@ N'oubliez pas de vous abonner et de laisser un pouce bleu !`
             onDeleteScript={handleDeleteScript}
             onImportJson={handleImportJson}
             onExportJson={handleExportJson}
+            countdownDuration={countdownDuration}
+            onCountdownDurationChange={setCountdownDuration}
+            fontFamily={fontFamily}
+            onFontFamilyChange={setFontFamily}
+            lineHeight={lineHeight}
+            onLineHeightChange={setLineHeight}
+            colors={colors}
+            onColorsChange={setColors}
+            onResetColors={handleResetColors}
+            guidePosition={guidePosition}
+            onGuidePositionChange={setGuidePosition}
+            showGuide={showGuide}
+            onToggleGuide={() => setShowGuide(prev => !prev)}
+            orientation={orientation}
+            onOrientationCycle={handleOrientationCycle}
           />
         </main>
       );
