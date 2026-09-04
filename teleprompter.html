@@ -219,6 +219,7 @@ N'oubliez pas de vous abonner et de laisser un pouce bleu !`
       guidePosition,
       showGuide,
       onWidthChange,
+      onGuidePositionChange,
       onHandDragChange
     }, ref) => {
 
@@ -258,62 +259,58 @@ N'oubliez pas de vous abonner et de laisser un pouce bleu !`
         return text;
       }, [text]);
 
-      // --- Red Arrows Width Resizing (Click & Drag) ---
-      const [hoveredArrow, setHoveredArrow] = React.useState(null);
-      const [isResizingArrow, setIsResizingArrow] = React.useState(false);
-      const arrowDragRef = React.useRef({ startX: 0, startWidth: width, moved: false, side: null });
+      // --- Red Arrows Guide Repositioning (Drag) & Width Resizing (Click) ---
+      const [isDraggingGuide, setIsDraggingGuide] = React.useState(false);
+      const guideDragRef = React.useRef({ startY: 0, startPos: guidePosition, moved: false, side: null });
 
       const handleArrowMouseDown = (side, e) => {
         e.stopPropagation();
         e.preventDefault();
-        arrowDragRef.current = {
-          startX: e.clientX,
-          startWidth: width,
+        guideDragRef.current = {
+          startY: e.clientY,
+          startPos: guidePosition,
           moved: false,
           side
         };
-        setIsResizingArrow(true);
+        setIsDraggingGuide(true);
       };
 
       React.useEffect(() => {
-        const handleMouseMoveArrow = (e) => {
-          if (!arrowDragRef.current.side) return;
-          const deltaX = e.clientX - arrowDragRef.current.startX;
-          if (Math.abs(deltaX) > 3) {
-            arrowDragRef.current.moved = true;
+        const handleMouseMoveGuide = (e) => {
+          if (!guideDragRef.current.side) return;
+          const deltaY = e.clientY - guideDragRef.current.startY;
+          if (Math.abs(deltaY) > 2) {
+            guideDragRef.current.moved = true;
           }
-          if (arrowDragRef.current.moved && onWidthChange) {
-            // Dragging outward expands, inward contracts symmetrically
-            const factor = arrowDragRef.current.side === 'left' ? -1 : 1;
-            const widthDelta = (deltaX / window.innerWidth) * 200 * factor;
-            const calculated = Math.round(arrowDragRef.current.startWidth + widthDelta);
-            const clamped = Math.min(100, Math.max(30, calculated));
-            onWidthChange(clamped);
+          if (onGuidePositionChange) {
+            const percentage = (e.clientY / window.innerHeight) * 100;
+            const clamped = Math.round(Math.min(90, Math.max(10, percentage)));
+            onGuidePositionChange(clamped);
           }
         };
 
-        const handleMouseUpArrow = () => {
-          if (arrowDragRef.current.side) {
-            if (!arrowDragRef.current.moved && onWidthChange) {
-              // Click action: left arrow shrinks, right arrow expands (looping at bounds)
-              if (arrowDragRef.current.side === 'left') {
+        const handleMouseUpGuide = () => {
+          if (guideDragRef.current.side) {
+            if (!guideDragRef.current.moved && onWidthChange) {
+              // Click on arrow resizes width: left shrinks, right expands
+              if (guideDragRef.current.side === 'left') {
                 onWidthChange(prev => (prev <= 30 ? 100 : Math.max(30, prev - 10)));
               } else {
                 onWidthChange(prev => (prev >= 100 ? 30 : Math.min(100, prev + 10)));
               }
             }
-            arrowDragRef.current = { startX: 0, startWidth: 0, moved: false, side: null };
-            setIsResizingArrow(false);
+            guideDragRef.current = { startY: 0, startPos: 0, moved: false, side: null };
+            setIsDraggingGuide(false);
           }
         };
 
-        window.addEventListener('mousemove', handleMouseMoveArrow);
-        window.addEventListener('mouseup', handleMouseUpArrow);
+        window.addEventListener('mousemove', handleMouseMoveGuide);
+        window.addEventListener('mouseup', handleMouseUpGuide);
         return () => {
-          window.removeEventListener('mousemove', handleMouseMoveArrow);
-          window.removeEventListener('mouseup', handleMouseUpArrow);
+          window.removeEventListener('mousemove', handleMouseMoveGuide);
+          window.removeEventListener('mouseup', handleMouseUpGuide);
         };
-      }, [onWidthChange]);
+      }, [onGuidePositionChange, onWidthChange]);
 
       // --- Hand Tool Drag-to-Scroll ("Clic Main") ---
       const [isHandDragging, setIsHandDragging] = React.useState(false);
@@ -373,49 +370,34 @@ N'oubliez pas de vous abonner et de laisser un pouce bleu !`
 
       return (
         <div className="relative w-full h-full flex flex-col items-center justify-start overflow-hidden">
-          {/* Target Eye-Line Overlay with Interactive Red Arrows */}
+          {/* Target Eye-Line Overlay with Interactive Red Arrows to Reposition Guide */}
           {showGuide && (
             <div 
-              className="guide-line absolute left-0 right-0 z-30 flex items-center justify-between px-3 transition-all duration-150 pointer-events-none"
+              className="guide-line absolute left-0 right-0 z-30 flex items-center justify-between px-3 pointer-events-none transition-all duration-75"
               style={{ top: `${guidePosition}%` }}
             >
-              {/* Left Arrow: Redimensionnement Largeur */}
+              {/* Left Arrow: Glisser verticalement pour déplacer le repère / Clic pour réduire largeur */}
               <button
                 type="button"
                 onMouseDown={(e) => handleArrowMouseDown('left', e)}
-                onMouseEnter={() => setHoveredArrow('left')}
-                onMouseLeave={() => setHoveredArrow(null)}
-                title="Cliquer pour réduire la largeur (-10%) ou glisser pour ajuster"
-                className={`pointer-events-auto w-8 h-8 rounded-r-xl bg-red-600/90 hover:bg-red-500 active:bg-red-700 backdrop-blur-sm flex items-center justify-center text-white shadow-lg text-xs font-bold cursor-ew-resize transition transform hover:scale-110 select-none ${
-                  isResizingArrow && arrowDragRef.current.side === 'left' ? 'ring-2 ring-white scale-110 bg-red-500' : ''
+                title="Glisser verticalement pour déplacer la hauteur du repère (Cliquer pour -10% largeur)"
+                className={`pointer-events-auto w-8 h-8 rounded-r-xl bg-red-600/90 hover:bg-red-500 active:bg-red-700 backdrop-blur-sm flex items-center justify-center text-white shadow-lg text-xs font-bold cursor-ns-resize transition transform hover:scale-110 select-none ${
+                  isDraggingGuide && guideDragRef.current.side === 'left' ? 'ring-2 ring-white scale-110 bg-red-500 shadow-red-500/50' : ''
                 }`}
               >
                 ►
               </button>
 
-              {/* Eyeline bar with interactive width pill */}
-              <div className="flex-1 h-[2px] mx-2 bg-gradient-to-r from-red-600/80 via-red-500/40 to-red-600/80 shadow-[0_0_8px_rgba(239,68,68,0.8)] relative flex items-center justify-center">
-                <div className={`transition-all duration-200 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold tracking-wider backdrop-blur-md shadow-md flex items-center gap-1.5 ${
-                  isResizingArrow || hoveredArrow
-                    ? 'bg-red-600 text-white scale-105 opacity-100 border border-red-400'
-                    : 'bg-black/60 text-red-300/80 border border-red-900/50 opacity-60'
-                }`}>
-                  <span>Largeur : {width}%</span>
-                  {(isResizingArrow || hoveredArrow) && (
-                    <span className="text-[9px] font-normal text-red-100 hidden sm:inline">• Glisser ou Cliquer pour ajuster</span>
-                  )}
-                </div>
-              </div>
+              {/* Laser-like Red Eyeline (No text or badge in the middle) */}
+              <div className="flex-1 h-[2px] mx-2 bg-gradient-to-r from-red-600/80 via-red-500/40 to-red-600/80 shadow-[0_0_8px_rgba(239,68,68,0.8)]"></div>
 
-              {/* Right Arrow: Redimensionnement Largeur */}
+              {/* Right Arrow: Glisser verticalement pour déplacer le repère / Clic pour agrandir largeur */}
               <button
                 type="button"
                 onMouseDown={(e) => handleArrowMouseDown('right', e)}
-                onMouseEnter={() => setHoveredArrow('right')}
-                onMouseLeave={() => setHoveredArrow(null)}
-                title="Cliquer pour élargir la largeur (+10%) ou glisser pour ajuster"
-                className={`pointer-events-auto w-8 h-8 rounded-l-xl bg-red-600/90 hover:bg-red-500 active:bg-red-700 backdrop-blur-sm flex items-center justify-center text-white shadow-lg text-xs font-bold cursor-ew-resize transition transform hover:scale-110 select-none ${
-                  isResizingArrow && arrowDragRef.current.side === 'right' ? 'ring-2 ring-white scale-110 bg-red-500' : ''
+                title="Glisser verticalement pour déplacer la hauteur du repère (Cliquer pour +10% largeur)"
+                className={`pointer-events-auto w-8 h-8 rounded-l-xl bg-red-600/90 hover:bg-red-500 active:bg-red-700 backdrop-blur-sm flex items-center justify-center text-white shadow-lg text-xs font-bold cursor-ns-resize transition transform hover:scale-110 select-none ${
+                  isDraggingGuide && guideDragRef.current.side === 'right' ? 'ring-2 ring-white scale-110 bg-red-500 shadow-red-500/50' : ''
                 }`}
               >
                 ◄
@@ -1041,7 +1023,10 @@ N'oubliez pas de vous abonner et de laisser un pouce bleu !`
       const [orientation, setOrientation] = React.useState(ORIENTATION_MODES.NORMAL);
       const [colors] = React.useState(DEFAULT_COLORS);
       const [showGuide, setShowGuide] = React.useState(true);
-      const [guidePosition] = React.useState(35);
+      const [guidePosition, setGuidePosition] = React.useState(() => {
+        const saved = localStorage.getItem('prompter_guide_pos');
+        return saved ? Number(saved) : 35;
+      });
       const [controlsVisible, setControlsVisible] = React.useState(true);
       const [isScriptManagerOpen, setIsScriptManagerOpen] = React.useState(false);
 
@@ -1070,6 +1055,10 @@ N'oubliez pas de vous abonner et de laisser un pouce bleu !`
       React.useEffect(() => {
         localStorage.setItem('prompter_width', String(width));
       }, [width]);
+
+      React.useEffect(() => {
+        localStorage.setItem('prompter_guide_pos', String(guidePosition));
+      }, [guidePosition]);
 
       // Scroll Animation Engine
       React.useEffect(() => {
@@ -1289,6 +1278,7 @@ N'oubliez pas de vous abonner et de laisser un pouce bleu !`
             guidePosition={guidePosition}
             showGuide={showGuide}
             onWidthChange={setWidth}
+            onGuidePositionChange={setGuidePosition}
             onHandDragChange={setIsHandDragging}
           />
 
