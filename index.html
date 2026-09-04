@@ -63,6 +63,15 @@
       -ms-overflow-style: none;
       scrollbar-width: none;
     }
+
+    .cursor-grab {
+      cursor: grab;
+      cursor: -webkit-grab;
+    }
+    .cursor-grabbing {
+      cursor: grabbing;
+      cursor: -webkit-grabbing;
+    }
   </style>
 </head>
 <body class="bg-black text-white antialiased">
@@ -208,7 +217,9 @@ N'oubliez pas de vous abonner et de laisser un pouce bleu !`
       fontFamily,
       colors,
       guidePosition,
-      showGuide
+      showGuide,
+      onWidthChange,
+      onHandDragChange
     }, ref) => {
 
       const transformClass = React.useMemo(() => {
@@ -247,28 +258,178 @@ N'oubliez pas de vous abonner et de laisser un pouce bleu !`
         return text;
       }, [text]);
 
+      // --- Red Arrows Width Resizing (Click & Drag) ---
+      const [hoveredArrow, setHoveredArrow] = React.useState(null);
+      const [isResizingArrow, setIsResizingArrow] = React.useState(false);
+      const arrowDragRef = React.useRef({ startX: 0, startWidth: width, moved: false, side: null });
+
+      const handleArrowMouseDown = (side, e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        arrowDragRef.current = {
+          startX: e.clientX,
+          startWidth: width,
+          moved: false,
+          side
+        };
+        setIsResizingArrow(true);
+      };
+
+      React.useEffect(() => {
+        const handleMouseMoveArrow = (e) => {
+          if (!arrowDragRef.current.side) return;
+          const deltaX = e.clientX - arrowDragRef.current.startX;
+          if (Math.abs(deltaX) > 3) {
+            arrowDragRef.current.moved = true;
+          }
+          if (arrowDragRef.current.moved && onWidthChange) {
+            // Dragging outward expands, inward contracts symmetrically
+            const factor = arrowDragRef.current.side === 'left' ? -1 : 1;
+            const widthDelta = (deltaX / window.innerWidth) * 200 * factor;
+            const calculated = Math.round(arrowDragRef.current.startWidth + widthDelta);
+            const clamped = Math.min(100, Math.max(30, calculated));
+            onWidthChange(clamped);
+          }
+        };
+
+        const handleMouseUpArrow = () => {
+          if (arrowDragRef.current.side) {
+            if (!arrowDragRef.current.moved && onWidthChange) {
+              // Click action: left arrow shrinks, right arrow expands (looping at bounds)
+              if (arrowDragRef.current.side === 'left') {
+                onWidthChange(prev => (prev <= 30 ? 100 : Math.max(30, prev - 10)));
+              } else {
+                onWidthChange(prev => (prev >= 100 ? 30 : Math.min(100, prev + 10)));
+              }
+            }
+            arrowDragRef.current = { startX: 0, startWidth: 0, moved: false, side: null };
+            setIsResizingArrow(false);
+          }
+        };
+
+        window.addEventListener('mousemove', handleMouseMoveArrow);
+        window.addEventListener('mouseup', handleMouseUpArrow);
+        return () => {
+          window.removeEventListener('mousemove', handleMouseMoveArrow);
+          window.removeEventListener('mouseup', handleMouseUpArrow);
+        };
+      }, [onWidthChange]);
+
+      // --- Hand Tool Drag-to-Scroll ("Clic Main") ---
+      const [isHandDragging, setIsHandDragging] = React.useState(false);
+      const handDragRef = React.useRef({ startY: 0, startScrollTop: 0, isDown: false, hasMoved: false });
+
+      const handleHandMouseDown = (e) => {
+        if (e.button !== 0) return;
+        // Do not initiate drag if clicking buttons, inputs, summaries, or guide controls
+        if (e.target.closest('button, input, textarea, a, select, summary, .guide-line')) return;
+
+        const container = ref.current;
+        if (!container) return;
+
+        handDragRef.current = {
+          startY: e.clientY,
+          startScrollTop: container.scrollTop,
+          isDown: true,
+          hasMoved: false
+        };
+        setIsHandDragging(true);
+        if (onHandDragChange) onHandDragChange(true);
+      };
+
+      React.useEffect(() => {
+        const handleHandMouseMove = (e) => {
+          if (!handDragRef.current.isDown) return;
+          const container = ref.current;
+          if (!container) return;
+
+          const deltaY = e.clientY - handDragRef.current.startY;
+          if (Math.abs(deltaY) > 2) {
+            handDragRef.current.hasMoved = true;
+          }
+
+          // Invert deltaY if vertical mirror is active
+          const isMirroredV = orientation === ORIENTATION_MODES.MIRROR_V || orientation === ORIENTATION_MODES.MIRROR_BOTH;
+          const direction = isMirroredV ? 1 : -1;
+
+          container.scrollTop = handDragRef.current.startScrollTop + (deltaY * direction);
+        };
+
+        const handleHandMouseUp = () => {
+          if (handDragRef.current.isDown) {
+            handDragRef.current.isDown = false;
+            setIsHandDragging(false);
+            if (onHandDragChange) onHandDragChange(false);
+          }
+        };
+
+        window.addEventListener('mousemove', handleHandMouseMove);
+        window.addEventListener('mouseup', handleHandMouseUp);
+        return () => {
+          window.removeEventListener('mousemove', handleHandMouseMove);
+          window.removeEventListener('mouseup', handleHandMouseUp);
+        };
+      }, [ref, orientation, onHandDragChange]);
+
       return (
         <div className="relative w-full h-full flex flex-col items-center justify-start overflow-hidden">
-          {/* Target Eye-Line Overlay */}
+          {/* Target Eye-Line Overlay with Interactive Red Arrows */}
           {showGuide && (
             <div 
-              className="guide-line absolute left-0 right-0 z-30 flex items-center justify-between px-4 transition-all duration-150"
+              className="guide-line absolute left-0 right-0 z-30 flex items-center justify-between px-3 transition-all duration-150 pointer-events-none"
               style={{ top: `${guidePosition}%` }}
             >
-              <div className="w-8 h-8 rounded-r-lg bg-red-600/80 backdrop-blur-sm flex items-center justify-center text-white shadow-lg text-xs font-bold">
+              {/* Left Arrow: Redimensionnement Largeur */}
+              <button
+                type="button"
+                onMouseDown={(e) => handleArrowMouseDown('left', e)}
+                onMouseEnter={() => setHoveredArrow('left')}
+                onMouseLeave={() => setHoveredArrow(null)}
+                title="Cliquer pour réduire la largeur (-10%) ou glisser pour ajuster"
+                className={`pointer-events-auto w-8 h-8 rounded-r-xl bg-red-600/90 hover:bg-red-500 active:bg-red-700 backdrop-blur-sm flex items-center justify-center text-white shadow-lg text-xs font-bold cursor-ew-resize transition transform hover:scale-110 select-none ${
+                  isResizingArrow && arrowDragRef.current.side === 'left' ? 'ring-2 ring-white scale-110 bg-red-500' : ''
+                }`}
+              >
                 ►
+              </button>
+
+              {/* Eyeline bar with interactive width pill */}
+              <div className="flex-1 h-[2px] mx-2 bg-gradient-to-r from-red-600/80 via-red-500/40 to-red-600/80 shadow-[0_0_8px_rgba(239,68,68,0.8)] relative flex items-center justify-center">
+                <div className={`transition-all duration-200 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold tracking-wider backdrop-blur-md shadow-md flex items-center gap-1.5 ${
+                  isResizingArrow || hoveredArrow
+                    ? 'bg-red-600 text-white scale-105 opacity-100 border border-red-400'
+                    : 'bg-black/60 text-red-300/80 border border-red-900/50 opacity-60'
+                }`}>
+                  <span>Largeur : {width}%</span>
+                  {(isResizingArrow || hoveredArrow) && (
+                    <span className="text-[9px] font-normal text-red-100 hidden sm:inline">• Glisser ou Cliquer pour ajuster</span>
+                  )}
+                </div>
               </div>
-              <div className="flex-1 h-[2px] bg-gradient-to-r from-red-600/80 via-red-500/40 to-red-600/80 shadow-[0_0_8px_rgba(239,68,68,0.8)]"></div>
-              <div className="w-8 h-8 rounded-l-lg bg-red-600/80 backdrop-blur-sm flex items-center justify-center text-white shadow-lg text-xs font-bold">
+
+              {/* Right Arrow: Redimensionnement Largeur */}
+              <button
+                type="button"
+                onMouseDown={(e) => handleArrowMouseDown('right', e)}
+                onMouseEnter={() => setHoveredArrow('right')}
+                onMouseLeave={() => setHoveredArrow(null)}
+                title="Cliquer pour élargir la largeur (+10%) ou glisser pour ajuster"
+                className={`pointer-events-auto w-8 h-8 rounded-l-xl bg-red-600/90 hover:bg-red-500 active:bg-red-700 backdrop-blur-sm flex items-center justify-center text-white shadow-lg text-xs font-bold cursor-ew-resize transition transform hover:scale-110 select-none ${
+                  isResizingArrow && arrowDragRef.current.side === 'right' ? 'ring-2 ring-white scale-110 bg-red-500' : ''
+                }`}
+              >
                 ◄
-              </div>
+              </button>
             </div>
           )}
 
-          {/* Scrolling Content Box */}
+          {/* Scrolling Content Box with Hand Tool Drag-to-Scroll */}
           <div
             ref={ref}
-            className={`teleprompter-scroll w-full h-full overflow-y-auto transition-transform duration-300 ease-out flex justify-center ${transformClass}`}
+            onMouseDown={handleHandMouseDown}
+            className={`teleprompter-scroll w-full h-full overflow-y-auto transition-transform duration-300 ease-out flex justify-center select-none ${transformClass} ${
+              isHandDragging ? 'cursor-grabbing' : 'cursor-grab'
+            }`}
           >
             <style>{`
               .teleprompter-content {
@@ -663,11 +824,32 @@ N'oubliez pas de vous abonner et de laisser un pouce bleu !`
     }) => {
       return (
         <React.Fragment>
-          {/* Main Action Bar - Strict Single Line */}
-          <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] transition-all duration-300 max-w-[98vw] ${
-            controlsVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12 pointer-events-none'
+          {/* Main Action Bar & Discrete Keyboard Shortcuts Wrapper */}
+          <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] transition-all duration-300 max-w-[98vw] flex flex-col items-center pointer-events-none ${
+            controlsVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
           }`}>
-            <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-800/90 text-white px-3 py-2 rounded-2xl shadow-2xl flex items-center gap-1.5 sm:gap-2 flex-nowrap whitespace-nowrap overflow-x-auto no-scrollbar">
+
+            {/* Discrete Keyboard Shortcuts */}
+            <div className="pointer-events-auto mb-1.5 flex items-center justify-center gap-1.5 sm:gap-2 text-[10px] text-gray-400/80 font-mono select-none px-3.5 py-1 rounded-full bg-gray-950/75 backdrop-blur-md border border-gray-800/60 shadow-lg max-w-[95vw] overflow-x-auto no-scrollbar whitespace-nowrap">
+              <span className="flex items-center gap-1"><kbd className="bg-gray-800/90 border border-gray-700/60 px-1.5 py-0.5 rounded text-[9px] text-gray-200 font-sans font-semibold shadow-sm">Espace</kbd> Pause</span>
+              <span className="text-gray-600">·</span>
+              <span className="flex items-center gap-1"><kbd className="bg-gray-800/90 border border-gray-700/60 px-1 py-0.5 rounded text-[9px] text-gray-200 font-sans font-semibold shadow-sm">↑↓</kbd> Vitesse</span>
+              <span className="text-gray-600">·</span>
+              <span className="flex items-center gap-1"><kbd className="bg-gray-800/90 border border-gray-700/60 px-1 py-0.5 rounded text-[9px] text-gray-200 font-sans font-semibold shadow-sm">←→</kbd> Taille</span>
+              <span className="text-gray-600">·</span>
+              <span className="flex items-center gap-1"><kbd className="bg-gray-800/90 border border-gray-700/60 px-1 py-0.5 rounded text-[9px] text-gray-200 font-sans font-semibold shadow-sm">[ ]</kbd> Largeur</span>
+              <span className="text-gray-600">·</span>
+              <span className="flex items-center gap-1"><kbd className="bg-gray-800/90 border border-gray-700/60 px-1 py-0.5 rounded text-[9px] text-gray-200 font-sans font-semibold shadow-sm">R</kbd> Reset</span>
+              <span className="text-gray-600">·</span>
+              <span className="flex items-center gap-1"><kbd className="bg-gray-800/90 border border-gray-700/60 px-1 py-0.5 rounded text-[9px] text-gray-200 font-sans font-semibold shadow-sm">M</kbd> Miroir</span>
+              <span className="text-gray-600">·</span>
+              <span className="flex items-center gap-1"><kbd className="bg-gray-800/90 border border-gray-700/60 px-1 py-0.5 rounded text-[9px] text-gray-200 font-sans font-semibold shadow-sm">G</kbd> Repère</span>
+              <span className="text-gray-600">·</span>
+              <span className="flex items-center gap-1"><kbd className="bg-gray-800/90 border border-gray-700/60 px-1 py-0.5 rounded text-[9px] text-gray-200 font-sans font-semibold shadow-sm">F</kbd> Plein écran</span>
+            </div>
+
+            {/* Strict Single Line Controls Bar */}
+            <div className="pointer-events-auto bg-gray-900/95 backdrop-blur-xl border border-gray-800/90 text-white px-3 py-2 rounded-2xl shadow-2xl flex items-center gap-1.5 sm:gap-2 flex-nowrap whitespace-nowrap overflow-x-auto no-scrollbar">
               
               {/* Play / Pause Toggle Button */}
               <button
@@ -865,6 +1047,7 @@ N'oubliez pas de vous abonner et de laisser un pouce bleu !`
 
       const [isCountingDown, setIsCountingDown] = React.useState(false);
       const [countdownValue, setCountdownValue] = React.useState(3);
+      const [isHandDragging, setIsHandDragging] = React.useState(false);
 
       const scrollContainerRef = React.useRef(null);
       const animationFrameRef = React.useRef(null);
@@ -895,7 +1078,7 @@ N'oubliez pas de vous abonner et de laisser un pouce bleu !`
           const deltaTime = (currentTime - lastTimeRef.current) / 1000;
           lastTimeRef.current = currentTime;
 
-          if (scrollContainerRef.current && isPlaying && !isCountingDown) {
+          if (scrollContainerRef.current && isPlaying && !isCountingDown && !isHandDragging) {
             const container = scrollContainerRef.current;
             const pxPerSecond = speed * 60;
             container.scrollTop += pxPerSecond * deltaTime;
@@ -925,7 +1108,7 @@ N'oubliez pas de vous abonner et de laisser un pouce bleu !`
             cancelAnimationFrame(animationFrameRef.current);
           }
         };
-      }, [isPlaying, isCountingDown, speed]);
+      }, [isPlaying, isCountingDown, speed, isHandDragging]);
 
       const dispatchCelestoryOutput = (explicitCompletion = null) => {
         try {
@@ -1105,6 +1288,8 @@ N'oubliez pas de vous abonner et de laisser un pouce bleu !`
             colors={colors}
             guidePosition={guidePosition}
             showGuide={showGuide}
+            onWidthChange={setWidth}
+            onHandDragChange={setIsHandDragging}
           />
 
           <FloatingControls
