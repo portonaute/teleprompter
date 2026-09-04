@@ -2,34 +2,75 @@
 
 [![Made with Celestory](https://img.shields.io/badge/Made%20with-Celestory-7C3AED?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iI0ZGRiIgZD0iTTEyIDJMMiA3djEwbDEwIDV2M2wxMC01VjdMMTIgMnoiLz48L3N2Zz4=)](https://creator.celestory.io)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
-[![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)](teleprompter.html)
+[![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)](index.html)
 [![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
 [![TailwindCSS](https://img.shields.io/badge/TailwindCSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
 
-> **Un teleprompteur professionnel, gratuit, sans installation, qui tourne dans n’importe quel navigateur — et qui s’insère nativement dans vos projets Celestory.**
+> **Un téléprompteur professionnel, gratuit, sans installation, qui tourne dans n’importe quel navigateur — avec gestion multi-scripts JSON, modes miroirs pour vitres physiques, guide de lecture optique et défilement fluide.**
 
 ---
 
 ## 🇫🇷 **Français**
 
-### ✨ Pourquoi ce teleprompteur ?
+### ✨ Pourquoi ce téléprompteur ?
 
 Pour **tous les créateurs de contenus** — youtubers, formateurs, conférenciers, streamers, podcasteurs, comédiens — **avoir un bon teleprompteur gratuit est essentiel** :  
 pas de budget pour du matériel pro, pas de logiciel lourd à installer, pas de watermark, pas de limite de temps. Juste **un outil qui marche, tout de suite, partout**.
 
-### 🚀 Fonctionnalités clés
+### 🚀 Fonctionnalités clés (v2)
 
 | Fonction | Détail |
 |----------|--------|
-| **Défilement fluide & configurable** | Vitesse 0.25× → 4×, pas de 0.25×, pas de saccade |
-| **Taille de police & largeur** | 20 → 150 px, largeur 50 % → 100 % viewport |
-| **4 orientations** | Portrait, Portrait miroir, Paysage, Paysage miroir (idéal pour téléprompteurs physiques) |
-| **Couleurs 100 % personnalisables** | Texte, H1/H2/H3, Gras, fond des menus `<details>`, titre des menus |
-| **Raccourcis clavier** | `Espace` = Play/Pause · `D` = +vitesse · `S` = -vitesse |
-| **Contrôles rétractables** | Bouton flottant → panneau complet (Tailwind + backdrop-blur) |
-| **Markdown-like rendering** | Titres, listes, gras, `<details>/<summary>` rendus nativement |
-| **Zéro dépendance locale** | Un seul fichier `teleprompter.html` — fonctionne *offline* une fois chargé |
-| **Export / Intégration Celestory** | Copiez le bloc HTML5 dans **Celestory Creator** → insérez-le dans n’importe quel scénario (chatbot, visual novel, formation) |
+| **Gestionnaire multi-scripts JSON** | Stockez, éditez et basculez entre plusieurs scripts. Import et export au format JSON. |
+| **Compte à rebours animé (3s)** | Lancement avec décompte visuel 3..2..1 pour se caler face caméra avant le défilement. |
+| **Défilement ultra-fluide** | Défilement 60 fps haute précision basé sur `requestAnimationFrame` et delta-time. |
+| **Vitesse réglable** | De 0.2× à 5.0× avec incréments fins de 0.2× (clavier ou interface). |
+| **Taille de police ajustable** | De 20 à 120 px avec boutons `A-`/`A+` ou touches fléchées gauche/droite. |
+| **4 modes miroirs optiques** | Normal, Miroir horizontal, Miroir vertical, Miroir combiné (idéal pour vitres semi-réfléchissantes de prompteurs). |
+| **Ligne repère d'œil (Eye-Line)** | Ligne guide rouge avec balises `►` et `◄` à 35% de la hauteur pour maintenir le contact visuel caméra. |
+| **Raccourcis clavier complets** | `Espace` = Play/Pause · `↑`/`↓` = Vitesse · `←`/`→` = Taille · `R` = Reset · `M` = Miroir · `G` = Repère · `F` = Plein écran |
+| **Barre de contrôles rétractable** | Barre d'action flottante moderne Tailwind + backdrop-blur, masquable d'un clic. |
+| **Rendu Markdown & HTML riche** | Titres H1/H2/H3 colorés, listes à puces, texte en gras, sections escamotables `<details>/<summary>`. |
+| **Zéro dépendance locale** | Fonctionne directement dans le navigateur via CDN ou déployé via Docker / Coolify. |
+
+### ⌨️ Raccourcis Clavier
+
+| Touche | Action |
+|---|---|
+| <kbd>Espace</kbd> | Lancer le compte à rebours ou Mettre en pause |
+| <kbd>↑</kbd> / <kbd>↓</kbd> | Augmenter / Diminuer la vitesse (pas de 0.2x) |
+| <kbd>→</kbd> / <kbd>←</kbd> | Augmenter / Diminuer la taille de police (pas de 4px) |
+| <kbd>R</kbd> | Réinitialiser le prompteur en haut |
+| <kbd>M</kbd> | Basculer entre les modes miroirs (Normal, H, V, Both) |
+| <kbd>G</kbd> | Afficher ou masquer la ligne repère d'œil |
+| <kbd>F</kbd> | Mode Plein Écran |
+| <kbd>Échap</kbd> | Fermer le gestionnaire de scripts |
+
+### 🛠️ Utilisation rapide
+
+```bash
+# 1. Clonez le dépôt
+git clone https://github.com/portonaute/teleprompter.git
+cd teleprompter
+
+# 2. Ouvrez simplement index.html dans votre navigateur
+open index.html
+```
+
+### 🐳 Déploiement Docker & Coolify
+
+Un `Dockerfile` Nginx léger est inclus :
+
+```bash
+docker build -t teleprompter .
+docker run -d -p 8080:80 teleprompter
+```
+
+Dans **Coolify** :
+1. Créez une application depuis le dépôt GitHub `https://github.com/portonaute/teleprompter`.
+2. Choisissez le buildpack `static` ou `dockerfile`.
+3. Définissez le domaine cible (ex: `https://teleprompter.deploy.fr.nocodespacelab.com`).
+4. Déployez en 1 clic !
 
 ### 🧩 Le bloc HTML5 sur **Celestory Creator**
 
@@ -39,57 +80,6 @@ Le code React/Tailwind complet est packagé en **un bloc HTML5 autonome** prêt 
 
 > Dans l’éditeur Celestory : *Ajouter un bloc → HTML5 → Coller le code → Publier*.  
 > Le teleprompteur devient alors un **composant réutilisable** dans vos expériences interactives.
-
-### 🌌 Intégration dans l’écosystème **Celestory**
-
-| Cas d’usage | Comment ça s’insère |
-|-------------|---------------------|
-| **Formation interactive** | Affichez le script du formateur en overlay pendant l’enregistrement vidéo |
-| **Visual Novel / Jeux narratifs** | Télé-prompt pour les doubleurs / voice-actors pendant la session d’enregistrement |
-| **Chatbot / Avatar IA** | Synchronisez le texte défilant avec la synthèse vocale (TTS) pour un présentateur virtuel parfait |
-| **Présentation live / Conférence** | Lancez le fichier HTML sur un second écran / tablette → mode miroir pour vitre de teleprompteur physique |
-| **Accessibilité** | Taille de police géante, contraste personnalisé → confort lecture pour tous |
-
-> **Celestory** = plateforme no-code pour créer **jeux vidéo, formations, chatbots, visual novels** sans écrire de code (ou avec du JS custom si besoin).  
-> Ce teleprompteur illustre la puissance des **blocs HTML5** : n’importe quel composant React/Vue/Svelte/Vanilla peut devenir un *building block* réutilisable dans vos scénarios.
-
-### 🛠️ Utilisation rapide
-
-```bash
-# 1. Clonez ou téléchargez teleprompter.html
-git clone https://github.com/portonaute/teleprompter.git
-cd teleprompter
-
-# 2. Ouvrez simplement le fichier dans votre navigateur
-#    (double-clic ou `open teleprompter.html` / `xdg-open teleprompter.html`)
-```
-
-> **Aucun `npm install`, aucun build, aucun serveur requis.**  
-> Le CDN Tailwind + React/Babel chargent à la volée.
-
-### 🎨 Personnalisation avancée
-
-Modifiez les constantes en haut du `<script type="text/babel">` :
-
-```js
-const DEFAULT_TEXT = `Votre script ici…`;   // Supporte <h1>, <strong>, <details>, etc.
-const TICK_MS = 40;                         // Fréquence rafraîchissement scroll
-const BASE_SCROLL_PX = 2;                   // Vitesse de base
-const SPEED_STEP = 0.25;                    // Incrément vitesse
-// … MIN_SPEED, MAX_SPEED, MIN_FONT_SIZE, MAX_FONT_SIZE, MIN_WIDTH, MAX_WIDTH
-const INITIAL_COLORS = { … };               // Palette par défaut
-```
-
-### 📦 Export & Partage
-
-- **Fichier unique** → glisser-déposer sur clé USB, envoyer par mail, héberger sur GitHub Pages / Netlify / Vercel en 1 clic.
-- **Intégration Celestory** → le bloc HTML5 reste **éditable** dans le Creator (vous changez le texte par défaut, les couleurs, etc. sans toucher au code).
-
-### 🤝 Contribuer
-
-1. Fork → branche `feature/…`  
-2. Modifiez `teleprompter.html` (le code est tout dedans)  
-3. PR avec description claire + captures d’écran si UI
 
 ### 📄 Licence
 
@@ -105,84 +95,29 @@ const INITIAL_COLORS = { … };               // Palette par défaut
 For **every content creator** — YouTubers, trainers, speakers, streamers, podcasters, actors — **having a great free teleprompter is essential**:  
 no budget for pro gear, no heavy software to install, no watermark, no time limit. Just **a tool that works, instantly, anywhere**.
 
-### 🚀 Key Features
+### 🚀 Key Features (v2)
 
 | Feature | Detail |
 |---------|--------|
-| **Smooth, configurable scrolling** | Speed 0.25× → 4×, 0.25× steps, zero jitter |
-| **Font size & width** | 20 → 150 px, width 50 % → 100 % viewport |
-| **4 orientations** | Portrait, Portrait Mirrored, Landscape, Landscape Mirrored (perfect for physical teleprompter rigs) |
-| **100 % customizable colors** | Text, H1/H2/H3, Bold, `<details>` background, summary title |
-| **Keyboard shortcuts** | `Space` = Play/Pause · `D` = faster · `S` = slower |
-| **Collapsible controls** | Floating button → full panel (Tailwind + backdrop-blur) |
-| **Markdown-like rendering** | Headings, lists, bold, `<details>/<summary>` rendered natively |
-| **Zero local dependencies** | Single `teleprompter.html` — works *offline* once loaded |
-| **Export / Celestory integration** | Copy the HTML5 block into **Celestory Creator** → drop it into any scenario (chatbot, visual novel, training) |
-
-### 🧩 The HTML5 Block on **Celestory Creator**
-
-The full React/Tailwind code is packaged as a **standalone HTML5 block** ready to use:
-
-🔗 **Celestory Creator Project** → [https://creator.celestory.io/project/35kbwA-1w](https://creator.celestory.io/project/35kbwA-1w)
-
-> In the Celestory editor: *Add Block → HTML5 → Paste Code → Publish*.  
-> The teleprompter becomes a **reusable component** inside your interactive experiences.
-
-### 🌌 Integration in the **Celestory** Ecosystem
-
-| Use Case | How it fits |
-|----------|-------------|
-| **Interactive Training** | Show the trainer’s script as an overlay while recording video |
-| **Visual Novel / Narrative Games** | Teleprompt for voice actors during recording sessions |
-| **Chatbot / AI Avatar** | Sync scrolling text with TTS for a flawless virtual presenter |
-| **Live Presentation / Conference** | Run the HTML on a second screen / tablet → mirror mode for physical teleprompter glass |
-| **Accessibility** | Huge font sizes, custom contrast → reading comfort for everyone |
-
-> **Celestory** = no-code platform to create **video games, training modules, chatbots, visual novels** without writing code (or with custom JS when needed).  
-> This teleprompter showcases the power of **HTML5 blocks**: any React/Vue/Svelte/Vanilla component can become a *reusable building block* in your scenarios.
+| **Multi-script JSON Manager** | Store, edit and switch between multiple scripts. Import and export universal JSON files. |
+| **Animated 3-Second Countdown** | Visual countdown 3..2..1 to prepare yourself before scrolling starts. |
+| **Ultra-smooth Scrolling** | 60 fps precision scrolling powered by `requestAnimationFrame` and delta-time. |
+| **Configurable Speed** | 0.2× to 5.0× speed control with 0.2× fine increments. |
+| **Adjustable Font Size** | 20 to 120 px with quick `A-`/`A+` buttons or arrow keys. |
+| **4 Mirror Modes** | Normal, Horizontal Mirror, Vertical Mirror, Dual Mirror (perfect for studio teleprompter glass rigs). |
+| **Target Eye-Line Guide** | Red guide line with `►` and `◄` indicators at 35% height to maintain camera eye contact. |
+| **Full Keyboard Shortcuts** | `Space` = Play/Pause · `↑`/`↓` = Speed · `←`/`→` = Font · `R` = Reset · `M` = Mirror · `G` = Guide · `F` = Fullscreen |
+| **Collapsible Floating Bar** | Sleek Tailwind floating action bar with backdrop-blur, collapsible with one click. |
+| **Rich Markdown & HTML** | Colored H1/H2/H3 headings, bullet lists, bold text, collapsible `<details>/<summary>` notes. |
+| **Zero Dependencies** | Runs right out of the box in the browser or via Docker / Coolify. |
 
 ### 🛠️ Quick Start
 
 ```bash
-# 1. Clone or download teleprompter.html
 git clone https://github.com/portonaute/teleprompter.git
 cd teleprompter
-
-# 2. Open the file in your browser
-#    (double-click or `open teleprompter.html` / `xdg-open teleprompter.html`)
+open index.html
 ```
-
-> **No `npm install`, no build, no server required.**  
-> Tailwind + React/Babel load via CDN on the fly.
-
-### 🎨 Advanced Customization
-
-Edit the constants at the top of the `<script type="text/babel">` block:
-
-```js
-const DEFAULT_TEXT = `Your script here…`;   // Supports <h1>, <strong>, <details>, etc.
-const TICK_MS = 40;                         // Scroll refresh interval
-const BASE_SCROLL_PX = 2;                   // Base scroll speed
-const SPEED_STEP = 0.25;                    // Speed increment
-// … MIN_SPEED, MAX_SPEED, MIN_FONT_SIZE, MAX_FONT_SIZE, MIN_WIDTH, MAX_WIDTH
-const INITIAL_COLORS = { … };               // Default color palette
-```
-
-### 📦 Export & Share
-
-- **Single file** → drag to USB, email, host on GitHub Pages / Netlify / Vercel in one click.
-- **Celestory Integration** → the HTML5 block stays **editable** in the Creator (change default text, colors, etc. without touching code).
-
-### 🤝 Contributing
-
-1. Fork → branch `feature/…`  
-2. Edit `teleprompter.html` (everything is in there)  
-3. PR with clear description + screenshots if UI changes
-
-### 📄 License
-
-**MIT** — free to use, modify, redistribute, including commercially.  
-*Made with ❤️ by the Celestory team & the no-code community.*
 
 ---
 
@@ -191,8 +126,3 @@ const INITIAL_COLORS = { … };               // Default color palette
 - **Celestory Creator** — [https://creator.celestory.io](https://creator.celestory.io)
 - **Projet Teleprompteur sur Celestory** — [https://creator.celestory.io/project/35kbwA-1w](https://creator.celestory.io/project/35kbwA-1w)
 - **Dépôt GitHub** — [https://github.com/portonaute/teleprompter](https://github.com/portonaute/teleprompter)
-- **Documentation Celestory (blocs HTML5)** — [https://docs.celestory.io/blocks/html5](https://docs.celestory.io/blocks/html5)
-
----
-
-> **Prêt à tourner ?** → Ouvrez `teleprompter.html`, collez votre script, réglez la vitesse, et **enregistrez comme un pro — gratuitement, pour toujours.**
