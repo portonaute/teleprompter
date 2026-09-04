@@ -6,7 +6,7 @@
 [![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
 [![TailwindCSS](https://img.shields.io/badge/TailwindCSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
 
-> **Un téléprompteur professionnel, gratuit, sans installation, qui tourne dans n’importe quel navigateur — avec gestion multi-scripts JSON, modes miroirs pour vitres physiques, guide de lecture optique et défilement fluide.**
+> **Un téléprompteur professionnel, gratuit, sans installation, qui tourne dans n’importe quel navigateur — avec support complet Markdown (.md) et JSON, choix de la largeur de lecture, modes miroirs optiques, guide d'œil et défilement fluide.**
 
 ---
 
@@ -17,20 +17,21 @@
 Pour **tous les créateurs de contenus** — youtubers, formateurs, conférenciers, streamers, podcasteurs, comédiens — **avoir un bon teleprompteur gratuit est essentiel** :  
 pas de budget pour du matériel pro, pas de logiciel lourd à installer, pas de watermark, pas de limite de temps. Juste **un outil qui marche, tout de suite, partout**.
 
-### 🚀 Fonctionnalités clés (v2)
+### 🚀 Fonctionnalités clés (v2.1)
 
 | Fonction | Détail |
 |----------|--------|
-| **Gestionnaire multi-scripts JSON** | Stockez, éditez et basculez entre plusieurs scripts. Import et export au format JSON. |
-| **Compte à rebours animé (3s)** | Lancement avec décompte visuel 3..2..1 pour se caler face caméra avant le défilement. |
+| **Support Markdown (.md) & HTML** | Rédigez, collez ou importez directement vos fichiers `.md` ou `.txt`. Barre d'outils Markdown intégrée (H1, H2, Gras, Listes, Notes). |
+| **Largeur de texte ajustable** | De 30 % à 100 % de l'écran pour centrer la colonne de lecture sous l'objectif de caméra et réduire les mouvements d'yeux. |
+| **Gestionnaire multi-scripts** | Stockez, basculez et gérez plusieurs discours avec sauvegarde automatique (`localStorage`), import/export JSON et import Markdown. |
+| **Compte à rebours animé (3s)** | Lancement avec décompte visuel 3..2..1 pour se préparer face caméra avant le défilement. |
 | **Défilement ultra-fluide** | Défilement 60 fps haute précision basé sur `requestAnimationFrame` et delta-time. |
 | **Vitesse réglable** | De 0.2× à 5.0× avec incréments fins de 0.2× (clavier ou interface). |
 | **Taille de police ajustable** | De 20 à 120 px avec boutons `A-`/`A+` ou touches fléchées gauche/droite. |
 | **4 modes miroirs optiques** | Normal, Miroir horizontal, Miroir vertical, Miroir combiné (idéal pour vitres semi-réfléchissantes de prompteurs). |
 | **Ligne repère d'œil (Eye-Line)** | Ligne guide rouge avec balises `►` et `◄` à 35% de la hauteur pour maintenir le contact visuel caméra. |
-| **Raccourcis clavier complets** | `Espace` = Play/Pause · `↑`/`↓` = Vitesse · `←`/`→` = Taille · `R` = Reset · `M` = Miroir · `G` = Repère · `F` = Plein écran |
+| **Raccourcis clavier complets** | `Espace` = Play/Pause · `↑`/`↓` = Vitesse · `←`/`→` = Taille · `[`/`]` = Largeur · `R` = Reset · `M` = Miroir · `G` = Repère · `F` = Plein écran |
 | **Barre de contrôles rétractable** | Barre d'action flottante moderne Tailwind + backdrop-blur, masquable d'un clic. |
-| **Rendu Markdown & HTML riche** | Titres H1/H2/H3 colorés, listes à puces, texte en gras, sections escamotables `<details>/<summary>`. |
 | **Zéro dépendance locale** | Fonctionne directement dans le navigateur via CDN ou déployé via Docker / Coolify. |
 
 ### ⌨️ Raccourcis Clavier
@@ -40,6 +41,7 @@ pas de budget pour du matériel pro, pas de logiciel lourd à installer, pas de 
 | <kbd>Espace</kbd> | Lancer le compte à rebours ou Mettre en pause |
 | <kbd>↑</kbd> / <kbd>↓</kbd> | Augmenter / Diminuer la vitesse (pas de 0.2x) |
 | <kbd>→</kbd> / <kbd>←</kbd> | Augmenter / Diminuer la taille de police (pas de 4px) |
+| <kbd>]</kbd> / <kbd>[</kbd> | Élargir / Rétrécir la colonne de lecture (pas de 5%) |
 | <kbd>R</kbd> | Réinitialiser le prompteur en haut |
 | <kbd>M</kbd> | Basculer entre les modes miroirs (Normal, H, V, Both) |
 | <kbd>G</kbd> | Afficher ou masquer la ligne repère d'œil |
@@ -69,60 +71,14 @@ docker run -d -p 8080:80 teleprompter
 Dans **Coolify** :
 1. Créez une application depuis le dépôt GitHub `https://github.com/portonaute/teleprompter`.
 2. Choisissez le buildpack `static` ou `dockerfile`.
-3. Définissez le domaine cible (ex: `https://teleprompter.deploy.fr.nocodespacelab.com`).
+3. Définissez le domaine cible (ex: `http://teleprompter.deploy.fr.nocodespacelab.com`).
 4. Déployez en 1 clic !
-
-### 🧩 Le bloc HTML5 sur **Celestory Creator**
-
-Le code React/Tailwind complet est packagé en **un bloc HTML5 autonome** prêt à l’emploi :
-
-🔗 **Projet Celestory Creator** → [https://creator.celestory.io/project/35kbwA-1w](https://creator.celestory.io/project/35kbwA-1w)
-
-> Dans l’éditeur Celestory : *Ajouter un bloc → HTML5 → Coller le code → Publier*.  
-> Le teleprompteur devient alors un **composant réutilisable** dans vos expériences interactives.
-
-### 📄 Licence
-
-**MIT** — libre d’usage, de modification, de redistribution, y compris commercial.  
-*Cœur ❤️ par l’équipe Celestory & la communauté no-code.*
-
----
-
-## 🇬🇧 **English**
-
-### ✨ Why this teleprompter?
-
-For **every content creator** — YouTubers, trainers, speakers, streamers, podcasters, actors — **having a great free teleprompter is essential**:  
-no budget for pro gear, no heavy software to install, no watermark, no time limit. Just **a tool that works, instantly, anywhere**.
-
-### 🚀 Key Features (v2)
-
-| Feature | Detail |
-|---------|--------|
-| **Multi-script JSON Manager** | Store, edit and switch between multiple scripts. Import and export universal JSON files. |
-| **Animated 3-Second Countdown** | Visual countdown 3..2..1 to prepare yourself before scrolling starts. |
-| **Ultra-smooth Scrolling** | 60 fps precision scrolling powered by `requestAnimationFrame` and delta-time. |
-| **Configurable Speed** | 0.2× to 5.0× speed control with 0.2× fine increments. |
-| **Adjustable Font Size** | 20 to 120 px with quick `A-`/`A+` buttons or arrow keys. |
-| **4 Mirror Modes** | Normal, Horizontal Mirror, Vertical Mirror, Dual Mirror (perfect for studio teleprompter glass rigs). |
-| **Target Eye-Line Guide** | Red guide line with `►` and `◄` indicators at 35% height to maintain camera eye contact. |
-| **Full Keyboard Shortcuts** | `Space` = Play/Pause · `↑`/`↓` = Speed · `←`/`→` = Font · `R` = Reset · `M` = Mirror · `G` = Guide · `F` = Fullscreen |
-| **Collapsible Floating Bar** | Sleek Tailwind floating action bar with backdrop-blur, collapsible with one click. |
-| **Rich Markdown & HTML** | Colored H1/H2/H3 headings, bullet lists, bold text, collapsible `<details>/<summary>` notes. |
-| **Zero Dependencies** | Runs right out of the box in the browser or via Docker / Coolify. |
-
-### 🛠️ Quick Start
-
-```bash
-git clone https://github.com/portonaute/teleprompter.git
-cd teleprompter
-open index.html
-```
 
 ---
 
 ## 🔗 Liens utiles / Useful Links
 
+- **Application en ligne** — [https://teleprompter.deploy.fr.nocodespacelab.com](https://teleprompter.deploy.fr.nocodespacelab.com)
 - **Celestory Creator** — [https://creator.celestory.io](https://creator.celestory.io)
 - **Projet Teleprompteur sur Celestory** — [https://creator.celestory.io/project/35kbwA-1w](https://creator.celestory.io/project/35kbwA-1w)
 - **Dépôt GitHub** — [https://github.com/portonaute/teleprompter](https://github.com/portonaute/teleprompter)
